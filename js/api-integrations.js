@@ -797,36 +797,44 @@ const pescappAPI = {
         },
 
         /**
-         * Calcula fase lunar
+         * Calcula fase lunar CORRETA (baseada em algoritmo real)
          */
         calcularFaseLunar(data = new Date()) {
-            let year = data.getFullYear();
-            let month = data.getMonth();
+            // Algoritmo de fase lunar CORRETO
+            // Fonte: Astronomical Algorithms by Jean Meeus
+            
+            const year = data.getFullYear();
+            const month = data.getMonth() + 1;
             const day = data.getDate();
             
-            // Algoritmo simplificado para fase lunar
-            let c = e = jd = b = 0;
+            // 1. Calcular Dias Julianos
+            let a = Math.floor((14 - month) / 12);
+            let y = year + 4800 - a;
+            let m = month + 12 * a - 3;
             
-            if (month < 3) {
-                year--;
-                month += 12;
-            }
+            // Data Julian
+            let jd = day + Math.floor((153 * m + 2) / 5) + 365 * y +
+                    Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
             
-            month++;
-            c = 365.25 * year;
-            e = 30.6 * month;
-            jd = c + e + day - 694039.09;
-            jd /= 29.5305882;
-            b = parseInt(jd);
-            jd -= b;
-            b = Math.round(jd * 8);
+            // 2. Calcular fase desde última lua nova (janeiro 2000)
+            const newMoon2000 = 2451550.1; // JD da primeira lua nova de 2000
+            const lunarCycle = 29.530588853; // Duração do ciclo lunar em dias
             
-            if (b >= 8) b = 0;
+            // Dias desde última lua nova
+            const daysSinceNew = (jd - newMoon2000) % lunarCycle;
             
-            const fases = ['nova', 'crescente', 'crescente', 'quartocrescente', 
-                          'crescente', 'crescente', 'cheia', 'minguante'];
+            // 3. Determinar fase baseada em dias do ciclo
+            let phase = daysSinceNew / lunarCycle;
             
-            return fases[b];
+            // 4. Converter para nome da fase
+            if (phase < 0.03 || phase >= 0.97) return 'nova';
+            if (phase < 0.22) return 'crescente';
+            if (phase < 0.28) return 'quartocrescente';
+            if (phase < 0.47) return 'crescente';
+            if (phase < 0.53) return 'cheia';
+            if (phase < 0.72) return 'minguante';
+            if (phase < 0.78) return 'quartominguante';
+            return 'minguante';
         },
 
         /**
