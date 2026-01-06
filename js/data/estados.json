@@ -1,0 +1,51 @@
+[
+    {
+        "sigla": "ES",
+        "nome": "Espírito Santo",
+        "arquivo": "es.js",
+        "regiao": "Sudeste",
+        "disponivel": true
+    },
+    {
+        "sigla": "RJ",
+        "nome": "Rio de Janeiro",
+        "arquivo": "rj.js",
+        "regiao": "Sudeste",
+        "disponivel": false
+    },
+    {
+        "sigla": "SP",
+        "nome": "São Paulo",
+        "arquivo": "sp.js",
+        "regiao": "Sudeste",
+        "disponivel": false
+    },
+    {
+        "sigla": "PR",
+        "nome": "Paraná",
+        "arquivo": "pr.js",
+        "regiao": "Sul",
+        "disponivel": false
+    },
+    {
+        "sigla": "SC",
+        "nome": "Santa Catarina",
+        "arquivo": "sc.js",
+        "regiao": "Sul",
+        "disponivel": false
+    },
+    {
+        "sigla": "RS",
+        "nome": "Rio Grande do Sul",
+        "arquivo": "rs.js",
+        "regiao": "Sul",
+        "disponivel": false
+    },
+    {
+        "sigla": "BA",
+        "nome": "Bahia",
+        "arquivo": "ba.js",
+        "regiao": "Nordeste",
+        "disponivel": false
+    }
+]

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PescApp - Tabela de Pesca</title>
+
+    <!-- ===== PWA CONFIGURATION ===== -->
+    <meta name="theme-color" content="#3498db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PescApp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Tabela de pesca para o litoral brasileiro - PescApp">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons - VERIFIQUE SE OS ARQUIVOS EXISTEM NESTES CAMINHOS -->
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="icons/icon-192x192.png" type="image/png" sizes="192x192">
+    <link rel="icon" href="icons/icon-512x512.png" type="image/png" sizes="512x512">
+    <link rel="apple-touch-icon" href="icons/icon-180x180.png">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    
+    <!-- Estilos para botão de instalação -->
+    <style>
+        @keyframes slideInUp {
+            from {
+                transform: translateX(-50%) translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutDown {
+            from {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-50%) translateY(100%);
+                opacity: 0;
+            }
+        }
+        
+        /* Estilo para o botão de instalação */
+        #installPWAButton {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            font-family: 'Segoe UI', system-ui;
+            font-weight: 600;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInUp 0.5s ease;
+        }
+        
+        #installPWAButton:hover {
+            transform: translateX(-50%) scale(1.05);
+            transition: transform 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-fish"></i> PescApp</h1>
+            <p class="subtitle">Tabela de pesca para o litoral brasileiro</p>
+        </div>
+    </header>
+    
+    <main class="container">
+        <section class="search-section">
+            <div class="filter-container">
+                <!-- Filtro de Estado -->
+                <div class="filter-group">
+                    <label for="estadoSelect"><i class="fas fa-map"></i> Estado:</label>
+                    <select id="estadoSelect" class="filter-select">
+                        <option value="">Selecione um estado</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro de Cidade -->
+                <div class="filter-group">
+                    <label for="cidadeSelect"><i class="fas fa-city"></i> Cidade:</label>
+                    <select id="cidadeSelect" class="filter-select" disabled>
+                        <option value="">Primeiro selecione o estado</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro de Praia -->
+                <div class="filter-group">
+                    <label for="praiaSelect"><i class="fas fa-umbrella-beach"></i> Praia:</label>
+                    <select id="praiaSelect" class="filter-select" disabled>
+                        <option value="">Primeiro selecione a cidade</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="locationInput" placeholder="Ou digite o nome da praia...">
+                <button id="searchButton"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+        </section>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+            <p>Analisando condições de pesca...</p>
+        </div>
+        
+        <section class="results-section" id="resultsSection">
+            <div class="location-info">
+                <div class="location-header">
+                    <div>
+                        <h2 class="location-title" id="locationTitle">Angra dos Reis - RJ</h2>
+                        <div class="data-quality" id="dataQualityIndicator">
+                            <span class="quality-badge quality-verified">✓ Dados verificados</span>
+                        </div>
+                    </div>
+                    <div class="probability-badge probability-high" id="overallProbability">Alta probabilidade</div>
+                </div>
+
+                <div id="probabilityDetails" class="probability-details">
+                    <!-- Detalhes da probabilidade aparecerão aqui -->
+                </div>
+                               
+                <div class="location-characteristics" id="locationCharacteristics">
+                    <!-- Características aparecerão aqui -->
+                </div>
+                
+                <p id="locationDescription">Carregando informações...</p>
+            </div>
+            
+            <div class="forecast-section">
+                <h3 class="forecast-title">Previsão de pesca para esta semana</h3>
+                <div class="forecast-cards" id="forecastCards">
+                    <!-- Previsões aparecerão aqui -->
+                </div>
+            </div>
+            
+            <div class="recommendations">
+                <h3><i class="fas fa-lightbulb"></i> Recomendações para pescar aqui</h3>
+                <ul id="recommendationsList">
+                    <!-- Recomendações aparecerão aqui -->
+                </ul>
+            </div>
+            
+            <!-- ===== SEÇÃO DO MAPA ===== -->
+            <section id="mapSection" style="display: none; margin-top: 30px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0; color: #2c3e50;">
+                        <i class="fas fa-map-marked-alt"></i> Mapa da Praia
+                    </h2>
+                    <button id="closeMapBtn" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </div>
+                
+                <!-- Controles do mapa -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <button id="showRouteBtn" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-route"></i> Como Chegar
+                    </button>
+                    <button id="myLocationBtn" style="background: #2ecc71; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-location-arrow"></i> Minha Localização
+                    </button>
+                    <select id="routeType" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                        <option value="car">🚗 Carro</option>
+                        <option value="walk">🚶 A Pé</option>
+                        <option value="bike">🚴 Bicicleta</option>
+                    </select>
+                </div>
+                
+                <!-- Container do mapa -->
+                <div id="map" style="height: 400px; width: 100%; border-radius: 10px; border: 2px solid #e0e0e0;"></div>
+                
+                <!-- Informações da rota -->
+                <div id="routeInfo" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h4 style="margin-top: 0;"><i class="fas fa-info-circle"></i> Informações da Rota</h4>
+                    <p id="routeDistance"><strong>Distância:</strong> --</p>
+                    <p id="routeTime"><strong>Tempo:</strong> --</p>
+                    <p id="routeInstructions"><strong>Instruções:</strong> --</p>
+                </div>
+            </section>
+            <!-- ===== FIM DA SEÇÃO DO MAPA ===== -->
+        </section>
+    </main>
+    
+    <footer class="container">
+        <p>PescApp © 2023 - Dados baseados em condições atmosféricas, fases da lua e marés</p>
+    </footer>
+    
+    <!-- Sistema principal -->
+    <script src="js/app.js"></script>
+    <script src="js/data/database-es.js"></script>
+    <script src="js/api-integrations.js"></script>
+    
+    <!-- Mapas -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    
+    <!-- ===== PWA SCRIPT ÚNICO E CENTRALIZADO ===== -->
+    <script>
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(function(registration) {
+                        console.log('✅ Service Worker registrado:', registration.scope);
+                        
+                        // Verificar atualizações
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('🔄 Nova versão encontrada!');
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('📱 Atualização disponível!');
+                                    mostrarAtualizacaoDisponivel();
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log('❌ Erro no Service Worker:', error);
+                    });
+            });
+        } else {
+            console.log('❌ Service Worker não suportado neste navegador');
+        }
+
+        // Instalação do PWA
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('📱 PWA pronto para instalação!');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Mostrar botão após interação do usuário
+            function iniciarInstalacao() {
+                setTimeout(mostrarBotaoInstalar, 1000);
+            }
+            
+            // Ouvir primeiro clique
+            document.addEventListener('click', function instalarAposClique() {
+                iniciarInstalacao();
+                document.removeEventListener('click', instalarAposClique);
+            });
+            
+            // Fallback após 10 segundos
+            setTimeout(function() {
+                if (!document.getElementById('installPWAButton')) {
+                    mostrarBotaoInstalar();
+                }
+            }, 10000);
+        });
+
+        function mostrarBotaoInstalar() {
+            if (!deferredPrompt || document.getElementById('installPWAButton')) return;
+            
+            const installButton = document.createElement('button');
+            installButton.id = 'installPWAButton';
+            installButton.innerHTML = '<i class="fas fa-download"></i> Instalar PescApp';
+            installButton.title = 'Instalar aplicativo na tela inicial';
+            
+            installButton.addEventListener('click', async () => {
+                installButton.style.display = 'none';
+                if (deferredPrompt) {
+                    try {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`Instalação: ${outcome}`);
+                        deferredPrompt = null;
+                    } catch (error) {
+                        console.error('Erro na instalação:', error);
+                    }
+                }
+            });
+            
+            document.body.appendChild(installButton);
+            
+            // Remover após 30 segundos
+            setTimeout(() => {
+                if (installButton.parentNode) {
+                    installButton.style.animation = 'slideOutDown 0.5s ease';
+                    setTimeout(() => installButton.remove(), 500);
+                }
+            }, 30000);
+        }
+
+        function mostrarAtualizacaoDisponivel() {
+            if (document.getElementById('updatePWAButton')) return;
+            
+            const updateButton = document.createElement('button');
+            updateButton.id = 'updatePWAButton';
+            updateButton.innerHTML = '<i class="fas fa-sync-alt"></i> Nova Versão - Clique para Atualizar';
+            updateButton.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #f39c12, #e74c3c);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+                font-family: 'Segoe UI', system-ui;
+                font-weight: 600;
+                z-index: 10001;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 0.9em;
+            `;
+            
+            updateButton.addEventListener('click', () => {
+                window.location.reload();
+            });
+            
+            document.body.appendChild(updateButton);
+        }
+
+        window.addEventListener('appinstalled', () => {
+            console.log('🎉 PescApp instalado!');
+            const button = document.getElementById('installPWAButton');
+            if (button) button.remove();
+            
+            // Remover também o botão de atualização se existir
+            const updateButton = document.getElementById('updatePWAButton');
+            if (updateButton) updateButton.remove();
+        });
+    </script>
+</body>
+</html>
