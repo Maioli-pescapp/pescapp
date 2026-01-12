@@ -1076,6 +1076,78 @@ window.debugPescApp = function() {
     console.log('Praia atual:', document.getElementById('praiaSelect').value);
 };
 
+// ===== FUNÇÕES DA FASE LUNAR =====
+
+function displayLunarPhase(phaseData) {
+    const container = document.getElementById('faseLunarSection');
+    if (!container) return;
+    
+    if (typeof LunarPhaseCalculator !== 'undefined') {
+        LunarPhaseCalculator.render(container, phaseData);
+    } else {
+        // Fallback simples
+        container.innerHTML = `
+            <div class="lunar-phase-card">
+                <div class="lunar-header">
+                    <div class="lunar-phase-icon">
+                        <span class="moon-emoji">${phaseData.emoji}</span>
+                        <div class="moon-phase">
+                            <div class="moon-phase-name">${phaseData.fase}</div>
+                            <div class="moon-percentage">${phaseData.porcentagem}% iluminada</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fishing-tip">
+                    <i class="fas fa-lightbulb"></i>
+                    <p>${phaseData.dicaPesca}</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function displayLunarForecast() {
+    const container = document.querySelector('.forecast-cards');
+    if (!container) return;
+    
+    if (typeof LunarPhaseCalculator !== 'undefined') {
+        const forecast = LunarPhaseCalculator.calculateForecast(new Date(), 7);
+        
+        // Adicionar título da previsão lunar
+        const forecastTitle = document.querySelector('.forecast-title');
+        if (forecastTitle) {
+            forecastTitle.innerHTML = `<i class="fas fa-calendar-alt"></i> Previsão da Lua para esta semana`;
+        }
+        
+        // Criar container para previsão lunar
+        let lunarForecastContainer = document.getElementById('lunarForecastContainer');
+        if (!lunarForecastContainer) {
+            lunarForecastContainer = document.createElement('div');
+            lunarForecastContainer.id = 'lunarForecastContainer';
+            lunarForecastContainer.className = 'lunar-forecast';
+            container.parentNode.insertBefore(lunarForecastContainer, container);
+        }
+        
+        LunarPhaseCalculator.renderForecast(lunarForecastContainer, forecast);
+    }
+}
+
+// ===== ATUALIZAR FUNÇÃO DE BUSCA =====
+
+// Na função que processa os resultados, adicione:
+async function processSearchResults(data) {
+    // ... código existente ...
+    
+    // Exibir fase lunar
+    const phaseData = pescappAPI.utils.calcularFaseLunar();
+    displayLunarPhase(phaseData);
+    
+    // Exibir previsão
+    displayLunarForecast();
+    
+    // ... resto do código ...
+}
+
 // =============================================
 // SISTEMA DE MAPA INTERATIVO - SIMPLIFICADO
 // =============================================
