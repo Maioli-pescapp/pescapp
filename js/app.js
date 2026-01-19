@@ -353,11 +353,14 @@ function generateForecast() {
         
         const probabilities = ['Alta', 'Média', 'Baixa'];
         const probability = probabilities[Math.floor(Math.random() * probabilities.length)];
+
+        
         
         forecasts.push({
             date: dateStr,
             probability: probability,
-            moon: i === 0 ? 'Crescente' : i === 1 ? 'Cheia' : 'Minguante',
+            moon: window.lunarCalculator ? window.lunarCalculator.getForecast(3)[i].phase : 'Crescente',
+            moonIcon: window.lunarCalculator ? window.lunarCalculator.getForecast(3)[i].icon : '🌒',
             wind: i === 0 ? 'Fraco' : i === 1 ? 'Moderado' : 'Forte',
             pressure: i === 0 ? 'Alta' : i === 1 ? 'Estável' : 'Baixa',
             tide: i === 0 ? 'Alta' : i === 1 ? 'Baixa' : 'Subindo'
@@ -388,7 +391,7 @@ function renderForecast(forecasts) {
                     <div class="forecast-icon"><i class="fas fa-moon"></i></div>
                     <div>
                         <div style="font-weight: 600;">Fase da Lua</div>
-                        <div>${forecast.moon}</div>
+                        <div>${forecast.moonIcon} ${forecast.moon}</div>
                     </div>
                 </div>
                 <div class="forecast-item">
