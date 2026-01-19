@@ -1,6 +1,25 @@
 // PescApp - Sistema com Arquivos Separados
 // Carrega dados dinamicamente de arquivos por estado
 
+// ================= FORÇAR ATUALIZAÇÃO NO CELULAR =================
+const FORCE_RELOAD_KEY = 'pescapp_force_reload';
+const CURRENT_VERSION = '2';
+
+// Verificar se precisa atualizar
+if (localStorage.getItem(FORCE_RELOAD_KEY) !== CURRENT_VERSION) {
+  console.log('🔄 Atualizando app para versão', CURRENT_VERSION);
+  localStorage.setItem(FORCE_RELOAD_KEY, CURRENT_VERSION);
+  
+  // Forçar reload apenas uma vez
+  if (!sessionStorage.getItem('already_reloaded')) {
+    sessionStorage.setItem('already_reloaded', 'true');
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }
+}
+// ================= FIM DO CÓDIGO DE ATUALIZAÇÃO =================
+
 // Variável global para dados
 let fishingData = {
     estados: {}
