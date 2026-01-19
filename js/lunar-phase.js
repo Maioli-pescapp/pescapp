@@ -1,156 +1,229 @@
-// lunar-phase-novo.js - VERSÃO 100% FUNCIONAL
-// Copie e cole isto em um NOVO arquivo
+// ==============================================
+// PescApp - Sistema de Fases da Lua (CORRIGIDO)
+// Versão: 2.0 - Sem loops infinitos
+// ==============================================
 
-const LunarPhaseCalculator = {
-    // CONSTANTES
-    MOON_PHASES: [
-        { min: 0, max: 0.03, name: 'Lua Nova', emoji: '🌑', score: 9 },
-        { min: 0.03, max: 0.25, name: 'Crescente', emoji: '🌒', score: 7 },
-        { min: 0.25, max: 0.28, name: 'Quarto Crescente', emoji: '🌓', score: 8 },
-        { min: 0.28, max: 0.47, name: 'Gibosa Crescente', emoji: '🌔', score: 6 },
-        { min: 0.47, max: 0.53, name: 'Lua Cheia', emoji: '🌕', score: 9 },
-        { min: 0.53, max: 0.72, name: 'Gibosa Minguante', emoji: '🌖', score: 5 },
-        { min: 0.72, max: 0.75, name: 'Quarto Minguante', emoji: '🌗', score: 7 },
-        { min: 0.75, max: 1.0, name: 'Lua Minguante', emoji: '🌘', score: 4 }
-    ],
-    
-    // MÉTODO PRINCIPAL
+class LunarPhaseCalculator {
+    constructor() {
+        console.log("✅ Sistema Lunar iniciado");
+        this.lunarCycle = 29.53058867; // Duração do ciclo lunar em dias
+    }
+
+    // ==================== CÁLCULO SIMPLES E CONFIÁVEL ====================
+
     calculatePhase(date = new Date()) {
-        try {
-            // Usar SunCalc diretamente
-            const moon = SunCalc.getMoonIllumination(date);
-            
-            // Determinar fase
-            let phaseName = 'Lua Nova';
-            let emoji = '🌑';
-            let score = 9;
-            
-            if (moon.phase < 0.03 || moon.phase > 0.97) {
-                phaseName = 'Lua Nova'; emoji = '🌑'; score = 9;
-            } else if (moon.phase < 0.25) {
-                phaseName = 'Crescente'; emoji = '🌒'; score = 7;
-            } else if (moon.phase < 0.28) {
-                phaseName = 'Quarto Crescente'; emoji = '🌓'; score = 8;
-            } else if (moon.phase < 0.47) {
-                phaseName = 'Gibosa Crescente'; emoji = '🌔'; score = 6;
-            } else if (moon.phase < 0.53) {
-                phaseName = 'Lua Cheia'; emoji = '🌕'; score = 9;
-            } else if (moon.phase < 0.72) {
-                phaseName = 'Gibosa Minguante'; emoji = '🌖'; score = 5;
-            } else if (moon.phase < 0.75) {
-                phaseName = 'Quarto Minguante'; emoji = '🌗'; score = 7;
-            } else {
-                phaseName = 'Lua Minguante'; emoji = '🌘'; score = 4;
-            }
-            
-            return {
-                phase: phaseName,
-                emoji: emoji,
-                percentage: Math.round(moon.fraction * 100),
-                phaseValue: moon.phase,
-                illumination: moon.fraction,
-                fishingInfo: {
-                    score: score,
-                    tip: this._getFishingTip(phaseName),
-                    bestTime: this._getBestTime(phaseName),
-                    recommendedBait: this._getRecommendedBait(phaseName),
-                    fishActivity: this._getFishActivity(phaseName)
-                },
-                calculationMethod: 'SunCalc'
-            };
-            
-        } catch (error) {
-            console.error('Erro:', error);
-            return this._getFallback(date);
-        }
-    },
-    
-    // MÉTODOS AUXILIARES
-    _getFishingTip(phaseName) {
-        const tips = {
-            'Lua Nova': 'Excelente para pesca noturna!',
-            'Crescente': 'Boa para pesca diurna.',
-            'Quarto Crescente': 'Ótima para pesca ao entardecer.',
-            'Gibosa Crescente': 'Condições moderadas.',
-            'Lua Cheia': 'Excelente para pesca noturna!',
-            'Gibosa Minguante': 'Pesca ao amanhecer.',
-            'Quarto Minguante': 'Boa para pesca de fundo.',
-            'Lua Minguante': 'Pesca mais desafiadora.'
-        };
-        return tips[phaseName] || 'Condições normais.';
-    },
-    
-    _getBestTime(phaseName) {
-        const times = {
-            'Lua Nova': 'Noite e Madrugada',
-            'Crescente': 'Manhã e Tarde',
-            'Quarto Crescente': 'Entardecer',
-            'Gibosa Crescente': 'Tarde e Noite',
-            'Lua Cheia': 'Noite Inteira',
-            'Gibosa Minguante': 'Amanhecer',
-            'Quarto Minguante': 'Manhã',
-            'Lua Minguante': 'Meio-dia'
-        };
-        return times[phaseName] || 'Manhã e Tarde';
-    },
-    
-    _getRecommendedBait(phaseName) {
-        const baits = {
-            'Lua Nova': 'Iscas luminosas',
-            'Crescente': 'Iscas naturais',
-            'Quarto Crescente': 'Jigs, plugs',
-            'Gibosa Crescente': 'Iscas de silicone',
-            'Lua Cheia': 'Poppers, superficiais',
-            'Gibosa Minguante': 'Iscas naturais',
-            'Quarto Minguante': 'Iscas de fundo',
-            'Lua Minguante': 'Iscas vivas'
-        };
-        return baits[phaseName] || 'Iscas naturais';
-    },
-    
-    _getFishActivity(phaseName) {
-        const activity = {
-            'Lua Nova': 'Muito Alta',
-            'Crescente': 'Alta',
-            'Quarto Crescente': 'Muito Alta',
-            'Gibosa Crescente': 'Moderada',
-            'Lua Cheia': 'Muito Alta',
-            'Gibosa Minguante': 'Moderada',
-            'Quarto Minguante': 'Alta',
-            'Lua Minguante': 'Baixa'
-        };
-        return activity[phaseName] || 'Moderada';
-    },
-    
-    _getFallback(date) {
+        // Data de referência: Lua Nova em 1 de janeiro de 2000
+        const referenceNewMoon = new Date(2000, 0, 6, 18, 14, 0);
+        const daysSinceReference = (date - referenceNewMoon) / (1000 * 60 * 60 * 24);
+        
+        // Idade da lua em dias (0 = lua nova)
+        const moonAge = daysSinceReference % this.lunarCycle;
+        if (moonAge < 0) moonAge += this.lunarCycle;
+        
+        // Converter para porcentagem (0-100%)
+        const phasePercentage = (moonAge / this.lunarCycle) * 100;
+        
         return {
-            phase: 'Lua Nova',
-            emoji: '🌑',
-            percentage: 0,
-            phaseValue: 0,
-            illumination: 0,
-            fishingInfo: {
-                score: 9,
-                tip: 'Dados temporariamente indisponíveis.',
-                bestTime: 'Manhã e Tarde',
-                recommendedBait: 'Iscas naturais',
-                fishActivity: 'Moderada'
-            },
-            calculationMethod: 'Fallback'
+            age: moonAge,
+            percentage: phasePercentage,
+            phase: this._getPhaseName(phasePercentage),
+            icon: this._getPhaseIcon(phasePercentage)
         };
-    },
-    
-    calculateForecast(startDate = new Date(), days = 7) {
+    }
+
+    // ==================== PREVISÃO PARA OS PRÓXIMOS DIAS ====================
+
+    getForecast(days = 7) {
         const forecast = [];
+        const today = new Date();
+        
         for (let i = 0; i < days; i++) {
-            const date = new Date(startDate);
-            date.setDate(startDate.getDate() + i);
-            forecast.push(this.calculatePhase(date));
+            const forecastDate = new Date(today);
+            forecastDate.setDate(today.getDate() + i);
+            
+            const phaseData = this.calculatePhase(forecastDate);
+            
+            forecast.push({
+                date: forecastDate,
+                dayName: this.getDayName(forecastDate),
+                phase: phaseData.phase,
+                icon: phaseData.icon,
+                percentage: phaseData.percentage,
+                age: phaseData.age
+            });
         }
+        
+        // VERIFICAÇÃO DE CONSISTÊNCIA
+        this._validateForecastConsistency(forecast);
+        
         return forecast;
     }
-};
 
-// Exportar
-window.LunarPhaseCalculator = LunarPhaseCalculator;
-console.log('🌙 Sistema lunar SIMPLES carregado!');
+    // ==================== FUNÇÕES AUXILIARES (CORRETAS) ====================
+
+    getDayName(date) {
+        const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        return days[date.getDay()];
+    }
+
+    _getPhaseName(percentage) {
+        if (percentage < 1.5 || percentage > 98.5) return "Nova";
+        if (percentage < 23.5) return "Crescente";
+        if (percentage < 26.5) return "Quarto Crescente";
+        if (percentage < 48.5) return "Crescente Gibosa";
+        if (percentage < 51.5) return "Cheia";
+        if (percentage < 73.5) return "Minguante Gibosa";
+        if (percentage < 76.5) return "Quarto Minguante";
+        return "Minguante";
+    }
+
+    _getPhaseIcon(percentage) {
+        if (percentage < 1.5 || percentage > 98.5) return "🌑";
+        if (percentage < 23.5) return "🌒";
+        if (percentage < 26.5) return "🌓";
+        if (percentage < 48.5) return "🌔";
+        if (percentage < 51.5) return "🌕";
+        if (percentage < 73.5) return "🌖";
+        if (percentage < 76.5) return "🌗";
+        return "🌘";
+    }
+
+    // ==================== VALIDAÇÃO DE CONSISTÊNCIA ====================
+
+    _validateForecastConsistency(forecast) {
+        console.log("🔍 Validando consistência da previsão...");
+        
+        const phaseOrder = ["Nova", "Crescente", "Quarto Crescente", "Crescente Gibosa", 
+                           "Cheia", "Minguante Gibosa", "Quarto Minguante", "Minguante"];
+        
+        let hasInconsistency = false;
+        
+        for (let i = 1; i < forecast.length; i++) {
+            const currentPhase = forecast[i].phase;
+            const previousPhase = forecast[i-1].phase;
+            
+            // Encontrar índices na ordem correta
+            const currentIndex = phaseOrder.indexOf(currentPhase);
+            const previousIndex = phaseOrder.indexOf(previousPhase);
+            
+            // Verificar se a transição faz sentido
+            const expectedNextIndex = (previousIndex + 1) % phaseOrder.length;
+            
+            if (currentIndex !== expectedNextIndex && currentIndex !== previousIndex) {
+                console.warn(`⚠️ Inconsistência detectada: ${previousPhase} → ${currentPhase}`);
+                hasInconsistency = true;
+            }
+        }
+        
+        if (!hasInconsistency) {
+            console.log("✅ Previsão lunar consistente!");
+        }
+    }
+
+    // ==================== MÉTODOS DE UTILIDADE ====================
+
+    getCurrentPhase() {
+        return this.calculatePhase();
+    }
+
+    getNextFullMoon() {
+        const current = this.calculatePhase();
+        const daysToFullMoon = (this.lunarCycle - current.age) % this.lunarCycle;
+        
+        const nextFullMoon = new Date();
+        nextFullMoon.setDate(nextFullMoon.getDate() + Math.ceil(daysToFullMoon));
+        
+        return {
+            date: nextFullMoon,
+            daysFromNow: Math.ceil(daysToFullMoon),
+            dayName: this.getDayName(nextFullMoon)
+        };
+    }
+}
+
+// ==================== INICIALIZAÇÃO E TESTE ====================
+
+// Criar instância global
+window.lunarCalculator = new LunarPhaseCalculator();
+
+// Teste automático ao carregar
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("=== 🧪 TESTE DO SISTEMA LUNAR ===");
+    
+    // Testar função getDayName
+    console.log("Teste getDayName:", lunarCalculator.getDayName(new Date()));
+    
+    // Testar previsão
+    const forecast = lunarCalculator.getForecast(7);
+    console.log("Previsão 7 dias:", forecast.map(f => `${f.dayName}: ${f.phase} ${f.icon}`));
+    
+    // Testar próxima lua cheia
+    const nextFullMoon = lunarCalculator.getNextFullMoon();
+    console.log(`Próxima lua cheia: ${nextFullMoon.dayName}, em ${nextFullMoon.daysFromNow} dias`);
+    
+    console.log("=== ✅ TESTE CONCLUÍDO ===");
+    
+    // Exibir no console de forma organizada
+    console.table(forecast.map(f => ({
+        Dia: f.dayName,
+        Fase: f.phase,
+        Ícone: f.icon,
+        'Idade (dias)': f.age.toFixed(2)
+    })));
+});
+
+// ==================== INTEGRAÇÃO COM A INTERFACE ====================
+
+function displayLunarForecast() {
+  if (!window.lunarCalculator) {
+    console.error("Sistema lunar não carregado!");
+    return;
+  }
+  
+  try {
+    // Obter previsão para 7 dias
+    const forecast = lunarCalculator.getForecast(7);
+    const container = document.getElementById('lunar-forecast');
+    
+    if (container) {
+      // Criar HTML das fases
+      container.innerHTML = forecast.map(day => `
+        <div class="lunar-day" title="${day.phase} - ${day.age.toFixed(1)} dias">
+          <div class="day">${day.dayName}</div>
+          <div class="phase-icon">${day.icon}</div>
+          <div class="phase-name">${day.phase}</div>
+        </div>
+      `).join('');
+      
+      console.log("✅ Previsão lunar exibida na interface!");
+    }
+    
+    // Atualizar próxima lua cheia
+    const nextFullMoon = lunarCalculator.getNextFullMoon();
+    const fullMoonElement = document.getElementById('next-full-moon');
+    if (fullMoonElement) {
+      fullMoonElement.textContent = 
+        `${nextFullMoon.dayName}, em ${nextFullMoon.daysFromNow} dias`;
+    }
+    
+  } catch (error) {
+    console.error("Erro ao exibir previsão lunar:", error);
+    const container = document.getElementById('lunar-forecast');
+    if (container) {
+      container.innerHTML = '<div class="lunar-loading">Erro ao carregar previsão lunar</div>';
+    }
+  }
+}
+
+// Executar quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("📅 Iniciando sistema lunar da interface...");
+  
+  // Pequeno delay para garantir que tudo carregou
+  setTimeout(displayLunarForecast, 100);
+  
+  // Atualizar a cada hora (opcional)
+  // setInterval(displayLunarForecast, 60 * 60 * 1000);
+});
+
+// ==================== FIM DO ARQUIVO ====================

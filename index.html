@@ -360,5 +360,21 @@
             if (updateButton) updateButton.remove();
         });
     </script>
+
+    <!-- COLE ISSO onde você quer que apareça a previsão lunar -->
+    <section class="lunar-section">
+        <h2>🌙 Previsão das Fases da Lua</h2>
+        <p class="lunar-subtitle">A lua influencia as marés e a pesca!</p>
+        
+        <div id="lunar-forecast" class="lunar-forecast">
+            <!-- As fases serão carregadas aqui pelo JavaScript -->
+            <div class="lunar-loading">Carregando previsão lunar...</div>
+        </div>
+        
+        <div class="lunar-info">
+            <p><strong>Próxima Lua Cheia:</strong> <span id="next-full-moon">calculando...</span></p>
+            <p class="lunar-tip">💡 Dica: Períodos de lua cheia e nova são ideais para pesca!</p>
+        </div>
+        </section>
 </body>
 </html>
