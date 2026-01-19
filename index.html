@@ -215,7 +215,7 @@
     </footer>
     
     <!-- Sistema principal -->
-    <script src="js/app.js?v=2"></script>
+    <script src="js/app.js?v=<?= new Date().getTime() ?>"></script>
     <script src="js/data/database-es.js"></script>
     <script src="js/api-integrations.js"></script>
     
@@ -223,7 +223,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
-    <script src="js/lunar-phase.js?v=2"></script>
+    <script src="js/lunar-phase.js?v=<?= new Date().getTime() ?>"></script>
 
     
     <!-- ===== PWA SCRIPT ÚNICO E CENTRALIZADO ===== -->
@@ -376,5 +376,40 @@
             <p class="lunar-tip">💡 Dica: Períodos de lua cheia e nova são ideais para pesca!</p>
         </div>
         </section>
+
+    <script>
+    // FORÇAR ATUALIZAÇÃO DO PWA
+    if ('serviceWorker' in navigator) {
+    // Registrar service worker
+    navigator.serviceWorker.register('sw.js').then(registration => {
+        console.log('✅ Service Worker registrado');
+        
+        // Forçar update imediatamente
+        registration.update();
+        
+        // Ouvir novas versões
+        registration.addEventListener('updatefound', () => {
+        console.log('🔄 Nova versão do PWA encontrada!');
+        const newWorker = registration.installing;
+        
+        newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed') {
+            if (navigator.serviceWorker.controller) {
+                console.log('📱 PWA pronto para atualizar!');
+                // Mostrar botão para atualizar
+                showUpdateNotification();
+            }
+            }
+        });
+        });
+    });
+    }
+
+    function showUpdateNotification() {
+    if (confirm('Nova versão do PescApp disponível! Atualizar agora?')) {
+        window.location.reload();
+    }
+    }
+    </script>
 </body>
 </html>
