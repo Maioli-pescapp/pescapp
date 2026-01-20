@@ -1,6 +1,44 @@
 // PescApp - Sistema com Arquivos Separados
 // Carrega dados dinamicamente de arquivos por estado
 
+// ============ FORÇAR ATUALIZAÇÃO DO PWA ============
+console.log('🔧 PescApp iniciando...');
+
+// 1. Detectar se é PWA instalado
+const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+
+if (isPWA) {
+    console.log('📱 PWA DETECTADO');
+    
+    // 2. Versão atual do sistema lunar
+    const LUNAR_VERSION = '3.0-corrigido-' + new Date().toISOString().split('T')[0];
+    
+    // 3. Verificar versão instalada
+    if (localStorage.getItem('pescapp_lunar_version') !== LUNAR_VERSION) {
+        console.log('🔄 ATUALIZAÇÃO NECESSÁRIA!');
+        console.log('   Nova versão:', LUNAR_VERSION);
+        
+        // 4. Salvar nova versão
+        localStorage.setItem('pescapp_lunar_version', LUNAR_VERSION);
+        
+        // 5. Limpar caches
+        if ('caches' in window) {
+            caches.keys().then(cacheNames => {
+                cacheNames.forEach(name => caches.delete(name));
+            });
+        }
+        
+        // 6. Forçar recarregamento
+        setTimeout(() => {
+            console.log('🔄 Recarregando PWA...');
+            window.location.reload(true);
+        }, 1000);
+    } else {
+        console.log('✅ PWA já atualizado:', LUNAR_VERSION);
+    }
+}
+// ============ FIM DO CÓDIGO ============
+
 // ================= FORÇAR ATUALIZAÇÃO NO CELULAR =================
 const FORCE_RELOAD_KEY = 'pescapp_force_reload';
 const CURRENT_VERSION = '2';
