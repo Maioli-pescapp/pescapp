@@ -329,6 +329,12 @@ function limparResultadosAnteriores() {
         probElement.className = 'probability-badge probability-low';
         probElement.title = '';
     }
+
+    // ============ ADICIONE ESTA LINHA ============
+    // 9. Limpar dados da praia anterior
+    window.praiaAtual = null;
+    window.ultimaMeteorologia = null;
+    // =============================================
     
     console.log('✅ Limpeza concluída');
 }
@@ -1155,16 +1161,7 @@ function renderDadosMeteorologicos(dadosMeteo) {
     const condicao = dadosMeteo.condicao;
     const atualizado = new Date(dadosMeteo.atualizadoEm).toLocaleTimeString('pt-BR');
     
-    // NOVO: Buscar informação da praia atual para OBS
-    let observacaoPraia = '';
-    if (window.praiaAtual) {
-        // Tenta obter descrição da praia
-        observacaoPraia = window.praiaAtual.descricao || 
-                         window.praiaAtual.caracteristicas?.observacao || 
-                         `Praia de ${window.praiaAtual.nome || 'pesca'}`;
-    }
-    
-    const meteoHTML = `
+        const meteoHTML = `
         <div class="real-time-data">
             <h3><i class="fas fa-cloud-sun"></i> Condições Atuais em Tempo Real</h3>
             <div class="weather-grid">
@@ -1229,18 +1226,7 @@ function renderDadosMeteorologicos(dadosMeteo) {
                         <div class="weather-value">${atualizado} | Fonte: ${dadosMeteo.fonte}</div>
                     </div>
                 </div>
-                
-                ${observacaoPraia ? `
-                <div class="weather-item">
-                    <div class="weather-icon">
-                        <i class="fas fa-info-circle"></i>
-                    </div>
-                    <div class="weather-info">
-                        <div class="weather-label">OBS</div>
-                        <div class="weather-value">${observacaoPraia.substring(0, 50)}${observacaoPraia.length > 50 ? '...' : ''}</div>
-                    </div>
-                </div>
-                ` : ''}
+                <!-- OBS REMOVIDA -->
             </div>
             
             <!-- Seção antiga (será escondida pelo CSS) -->
