@@ -728,10 +728,10 @@ const pescappAPI = {
         _calcularScore(fatores) {
             // Pesos para cada fator
             const pesos = {
-                mare: 0.40,      // 40%
-                atmosfera: 0.30, // 30%
-                local: 0.20,     // 20%
-                restricoes: 0.10 // 10%
+                mare: 0.50,      // 50%
+                atmosfera: 0.35, // 35%
+                local: 0.10,     // 20%
+                restricoes: 0.05 //  5%
             };
             
             // Calcular score ponderado
