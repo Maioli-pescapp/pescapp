@@ -63,6 +63,72 @@ let fishingData = {
     estados: {}
 };
 
+// =============================================
+// FUNÇÃO PARA CLASSIFICAR PRESSÃO
+// =============================================
+
+function classificarPressao(pressaoHPa) {
+    if (pressaoHPa > 1020) return 'Alta';
+    if (pressaoHPa < 1000) return 'Baixa';
+    return 'Estável';
+}
+
+function obterCategoriaPressao(valorPressao) {
+    if (!valorPressao || typeof valorPressao !== 'number') {
+        return 'Estável';
+    }
+    return classificarPressao(valorPressao);
+}
+
+// =============================================
+// FUNÇÃO SIMPLES PARA MARÉ (BASEADA NA HORA)
+// =============================================
+
+function obterStatusMarePorHora() {
+    const agora = new Date();
+    const horaAtual = agora.getHours();
+    const minutos = agora.getMinutes();
+    
+    // Ciclo simplificado para ES (6h de ciclo)
+    // 0-3h: Alta / 3-6h: Vazando / 6-9h: Baixa / 9-12h: Enchendo
+    // 12-15h: Alta / 15-18h: Vazando / 18-21h: Baixa / 21-24h: Enchendo
+    
+    if ((horaAtual >= 0 && horaAtual < 3) || (horaAtual >= 12 && horaAtual < 15)) {
+        return { status: 'Alta 📈', detalhes: 'Maré cheia' };
+    }
+    else if ((horaAtual >= 3 && horaAtual < 6) || (horaAtual >= 15 && horaAtual < 18)) {
+        return { status: 'Vazando ↘️', detalhes: 'Maré descendo' };
+    }
+    else if ((horaAtual >= 6 && horaAtual < 9) || (horaAtual >= 18 && horaAtual < 21)) {
+        return { status: 'Baixa 📉', detalhes: 'Maré baixa' };
+    }
+    else {
+        return { status: 'Enchendo ↗️', detalhes: 'Maré subindo' };
+    }
+}
+
+// ============ ADICIONE AQUI ============
+
+function classificarVento(velocidadeMs) {
+    if (velocidadeMs < 3) return 'Calmo';
+    if (velocidadeMs < 6) return 'Fraco';
+    if (velocidadeMs < 10) return 'Moderado';
+    if (velocidadeMs < 15) return 'Forte';
+    return 'Muito Forte';
+}
+
+function variarDirecaoVento(direcaoAtual) {
+    const direcoes = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
+    const indexAtual = direcoes.indexOf(direcaoAtual);
+    
+    if (indexAtual === -1) return direcoes[Math.floor(Math.random() * direcoes.length)];
+    
+    const variacao = Math.floor(Math.random() * 3) - 1;
+    const novoIndex = (indexAtual + variacao + direcoes.length) % direcoes.length;
+    
+    return direcoes[novoIndex];
+}
+
 // Cache para dados já carregados
 const dadosCache = {};
 
@@ -402,28 +468,120 @@ function generateForecast() {
     const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     
+    // ============ DADOS REAIS DA API ============
+    const dadosReais = window.ultimaMeteorologia || {};
+    const pressaoReal = dadosReais.pressao || 1013; // Fallback se não tiver dados
+    const ventoReal = dadosReais.vento || 10; // Fallback se não tiver dados
+    const direcaoVentoReal = dadosReais.direcaoVento || 'NE'; // Fallback
+    
+    // ============ CLASSIFICAÇÕES ============
+    const categoriaPressaoReal = obterCategoriaPressao(pressaoReal);
+    const categoriaVentoReal = classificarVento(ventoReal);
+    
+    console.log('📊 Dados reais para previsão:', {
+        pressao: `${pressaoReal} hPa (${categoriaPressaoReal})`,
+        vento: `${ventoReal} m/s (${categoriaVentoReal}) ${direcaoVentoReal}`
+    });
+    
     for (let i = 0; i < 3; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         
         const dateStr = `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
         
-        const probabilities = ['Alta', 'Média', 'Baixa'];
-        const probability = probabilities[Math.floor(Math.random() * probabilities.length)];
-
+        // ============ PROBABILIDADE MELHORADA ============
+        const probabilidadeBase = window.ultimaProbabilidade ? window.ultimaProbabilidade.score : 5;
+        let probability;
         
+        if (i === 0) {
+            // HOJE: usar probabilidade real da API
+            probability = probabilidadeBase >= 7 ? 'Alta' : 
+                         probabilidadeBase >= 5 ? 'Média' : 'Baixa';
+        } else {
+            // FUTURO: variação baseada na probabilidade de hoje
+            const variacao = Math.random() * 2 - 1; // -1 a +1
+            const probFutura = Math.max(0, Math.min(10, probabilidadeBase + variacao));
+            probability = probFutura >= 7 ? 'Alta' : 
+                         probFutura >= 5 ? 'Média' : 'Baixa';
+        }
+        
+        // ============ PRESSÃO PARA CADA DIA ============
+        let pressaoValor, pressaoCategoria;
+        
+        if (i === 0) {
+            // HOJE: usar valor REAL
+            pressaoValor = Math.round(pressaoReal);
+            pressaoCategoria = categoriaPressaoReal;
+        } else if (i === 1) {
+            // AMANHÃ: variação de +/- 3-8 hPa
+            const variacao = (Math.random() * 5 + 3) * (Math.random() > 0.5 ? 1 : -1);
+            pressaoValor = Math.round(pressaoReal + variacao);
+            pressaoCategoria = obterCategoriaPressao(pressaoValor);
+        } else {
+            // DEPOIS DE AMANHÃ: variação de +/- 5-12 hPa
+            const variacao = (Math.random() * 7 + 5) * (Math.random() > 0.5 ? 1 : -1);
+            pressaoValor = Math.round(pressaoReal + variacao);
+            pressaoCategoria = obterCategoriaPressao(pressaoValor);
+        }
+        
+        // ============ VENTO PARA CADA DIA ============
+        let ventoValor, ventoCategoria, direcaoVento;
+        
+        if (i === 0) {
+            // HOJE: usar valor REAL
+            ventoValor = ventoReal.toFixed(1);
+            ventoCategoria = categoriaVentoReal;
+            direcaoVento = direcaoVentoReal;
+        } else if (i === 1) {
+            // AMANHÃ: variação de +/- 30%
+            const variacaoPercentual = (Math.random() * 0.6 - 0.3); // -30% a +30%
+            ventoValor = (ventoReal * (1 + variacaoPercentual)).toFixed(1);
+            ventoCategoria = classificarVento(parseFloat(ventoValor));
+            direcaoVento = variarDirecaoVento(direcaoVentoReal);
+        } else {
+            // DEPOIS: variação maior +/- 50%
+            const variacaoPercentual = (Math.random() * 1.0 - 0.5); // -50% a +50%
+            ventoValor = (ventoReal * (1 + variacaoPercentual)).toFixed(1);
+            ventoCategoria = classificarVento(parseFloat(ventoValor));
+            direcaoVento = variarDirecaoVento(direcaoVentoReal);
+        }
+        
+        // ============ MARÉ ============
+        let tide;
+        if (i === 0) {
+            // HOJE: usar status baseado na hora atual
+            const mareHoje = obterStatusMarePorHora();
+            tide = mareHoje.status; // Ex: "Vazando ↘️"
+        } else if (i === 1) {
+            // AMANHÃ: status provável (avançar 6 horas no ciclo)
+            const horaAmanha = (new Date().getHours() + 6) % 24;
+            if (horaAmanha < 3 || (horaAmanha >= 12 && horaAmanha < 15)) {
+                tide = 'Alta 📈';
+            } else if (horaAmanha < 6 || (horaAmanha >= 15 && horaAmanha < 18)) {
+                tide = 'Vazando ↘️';
+            } else if (horaAmanha < 9 || (horaAmanha >= 18 && horaAmanha < 21)) {
+                tide = 'Baixa 📉';
+            } else {
+                tide = 'Enchendo ↗️';
+            }
+        } else {
+            // DEPOIS: variação aleatória
+            const opcoes = ['Alta 📈', 'Vazando ↘️', 'Baixa 📉', 'Enchendo ↗️'];
+            tide = opcoes[Math.floor(Math.random() * opcoes.length)];
+        }
         
         forecasts.push({
             date: dateStr,
             probability: probability,
             moon: window.lunarCalculator ? window.lunarCalculator.getForecast(3)[i].phase : 'Crescente',
             moonIcon: window.lunarCalculator ? window.lunarCalculator.getForecast(3)[i].icon : '🌒',
-            wind: i === 0 ? 'Fraco' : i === 1 ? 'Moderado' : 'Forte',
-            pressure: i === 0 ? 'Alta' : i === 1 ? 'Estável' : 'Baixa',
-            tide: i === 0 ? 'Alta' : i === 1 ? 'Baixa' : 'Subindo'
+            wind: `${ventoValor} m/s (${ventoCategoria}) ${direcaoVento}`,
+            pressure: `${pressaoValor} hPa (${pressaoCategoria})`,
+            tide: tide
         });
     }
     
+    console.log('📅 Previsão gerada:', forecasts);
     return forecasts;
 }
 
@@ -732,6 +890,11 @@ async function showFishingInfo(estadoSigla, cidadeNome, praiaNome) {
         // Renderizar dados meteorológicos REAIS se disponíveis
         if (dadosMeteoReais) {
             renderDadosMeteorologicos(dadosMeteoReais);
+         // ============ FORÇAR ATUALIZAÇÃO DA PRESSÃO ============
+            setTimeout(() => {
+                atualizarPressaoNaInterface();
+            }, 1500);
+            // =======================================================
         }
 
         // Salvar praia atual globalmente para a função renderRecommendations acessar
@@ -969,6 +1132,16 @@ async function buscarPorTexto() {
 
 // Função para renderizar dados meteorológicos
 function renderDadosMeteorologicos(dadosMeteo) {
+
+    // ============ SALVAR DADOS PARA USO NA PREVISÃO ============
+    // Salvar os dados meteorológicos globalmente para uso em generateForecast()
+    window.ultimaMeteorologia = dadosMeteo;
+    console.log('📊 Dados meteorológicos salvos para previsão:', {
+        pressao: dadosMeteo.pressao,
+        categoria: obterCategoriaPressao(dadosMeteo.pressao)
+    });
+    // ===========================================================
+
     const container = document.getElementById('locationCharacteristics');
     
     // REMOVER elemento anterior se existir
@@ -1651,34 +1824,7 @@ function extrairCoordenadas(praiaData) {
     return { lat: -20.3155, lng: -40.3128 };
 }
 
-// Modifique sua função showFishingInfo para incluir isto:
-// Procure a função showFishingInfo e adicione NO FINAL dela:
 
-/*
-// DENTRO DA SUA FUNÇÃO showFishingInfo, após mostrar os resultados:
-try {
-    // ... seu código existente ...
-    
-    // ===== ADICIONE ESTAS LINHAS NO FINAL =====
-    
-    // Extrai coordenadas da praia
-    const coordenadas = extrairCoordenadas(resultadoPraia);
-    
-    // Mostra o mapa após 500ms (tempo para carregar resultados)
-    setTimeout(() => {
-        mostrarMapaDaPraia(praiaNome, coordenadas.lat, coordenadas.lng);
-    }, 500);
-    
-    // ==========================================
-    
-} catch (error) {
-    // ... seu tratamento de erro existente ...
-}
-*/
-
-// =============================================
-// SISTEMA DE ALERTAS INTELIGENTES - MELHORADO
-// =============================================
 
 class AlertasPesca {
     constructor() {
@@ -2352,3 +2498,50 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// =============================================
+// ATUALIZAR PRESSÃO NA INTERFACE (FORÇADO)
+// =============================================
+
+function atualizarPressaoNaInterface() {
+    console.log('🔄 Atualizando pressão na interface...');
+    
+    // Aguardar um pouco para garantir que tudo carregou
+    setTimeout(() => {
+        // 1. Obter valor REAL da API
+        const dadosReais = window.ultimaMeteorologia;
+        
+        if (!dadosReais || !dadosReais.pressao) {
+            console.log('⚠️ Sem dados reais disponíveis');
+            return;
+        }
+        
+        const pressaoReal = dadosReais.pressao;
+        const categoriaReal = obterCategoriaPressao(pressaoReal);
+        
+        console.log(`📊 Dados para atualização: ${pressaoReal} hPa → ${categoriaReal}`);
+        
+        // 2. Encontrar TODOS os cartões de previsão
+        const forecastCards = document.querySelectorAll('.forecast-card');
+        
+        // 3. Atualizar cada cartão
+        forecastCards.forEach((card, index) => {
+            // Encontrar o elemento da pressão dentro deste cartão
+            const elementoPressao = card.querySelector('.forecast-item:nth-child(2) div:nth-child(2) div:nth-child(2)');
+            
+            if (elementoPressao) {
+                if (index === 0) {
+                    // DIA 0 (HOJE): usar valor REAL
+                    elementoPressao.textContent = `${pressaoReal} hPa (${categoriaReal})`;
+                    console.log(`✅ Cartão ${index}: atualizado para valor REAL`);
+                } else {
+                    // DIA 1 e 2: usar valores da previsão já gerada
+                    // Não mudamos, já está correto na generateForecast
+                    console.log(`📅 Cartão ${index}: mantendo previsão`);
+                }
+            }
+        });
+        
+        console.log('✅ Interface atualizada com sucesso!');
+    }, 1000); // Delay de 1 segundo para garantir carregamento
+}
