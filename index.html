@@ -219,7 +219,7 @@
         document.write('<script src="js/app.js?v=' + new Date().getTime() + '"><\/script>');
     </script>
     <script src="js/data/database-es.js"></script>
-    <script src="js/api-integrations.js"></script>
+    <script src="js/api-integrations.js?v=3.1"></script>
     
     <!-- Mapas -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -415,5 +415,45 @@
     }
     }
     </script>
+<script>
+// ============ FORÇAR ATUALIZAÇÃO PWA ============
+const PWA_ATUALIZACAO = 'v3.1-pesos-' + new Date().toISOString().split('T')[0];
+
+if (localStorage.getItem('pwa_atualizacao') !== PWA_ATUALIZACAO) {
+    console.log('🔄 DETECTADA NOVA VERSÃO - ATUALIZANDO PWA...');
+    
+    // Marcar que atualizou
+    localStorage.setItem('pwa_atualizacao', PWA_ATUALIZACAO);
+    
+    // 1. Limpar Service Worker antigo
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => {
+                registration.unregister();
+                console.log('🗑️ Service Worker removido');
+            });
+        });
+    }
+    
+    // 2. Limpar caches
+    if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => {
+                caches.delete(cacheName);
+                console.log('🗑️ Cache removido:', cacheName);
+            });
+        });
+    }
+    
+    // 3. Mostrar aviso (opcional)
+    setTimeout(() => {
+        if (confirm('Nova versão do PescApp disponível! Recarregar agora?')) {
+            window.location.reload(true);
+        }
+    }, 2000);
+}
+</script>
+
+
 </body>
 </html>

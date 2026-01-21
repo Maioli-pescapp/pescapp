@@ -1130,18 +1130,15 @@ async function buscarPorTexto() {
 }
 
 
-// Função para renderizar dados meteorológicos
 function renderDadosMeteorologicos(dadosMeteo) {
-
     // ============ SALVAR DADOS PARA USO NA PREVISÃO ============
-    // Salvar os dados meteorológicos globalmente para uso em generateForecast()
     window.ultimaMeteorologia = dadosMeteo;
     console.log('📊 Dados meteorológicos salvos para previsão:', {
         pressao: dadosMeteo.pressao,
         categoria: obterCategoriaPressao(dadosMeteo.pressao)
     });
     // ===========================================================
-
+    
     const container = document.getElementById('locationCharacteristics');
     
     // REMOVER elemento anterior se existir
@@ -1150,56 +1147,112 @@ function renderDadosMeteorologicos(dadosMeteo) {
         elementoAnterior.remove();
     }
     
+    // FORMATAR DADOS
+    const temperatura = `${dadosMeteo.temperatura}°C`;
+    const vento = `${dadosMeteo.vento} m/s ${dadosMeteo.direcaoVento}`;
+    const pressao = `${dadosMeteo.pressao} hPa`;
+    const umidade = `${dadosMeteo.umidade}%`;
+    const condicao = dadosMeteo.condicao;
+    const atualizado = new Date(dadosMeteo.atualizadoEm).toLocaleTimeString('pt-BR');
+    
+    // NOVO: Buscar informação da praia atual para OBS
+    let observacaoPraia = '';
+    if (window.praiaAtual) {
+        // Tenta obter descrição da praia
+        observacaoPraia = window.praiaAtual.descricao || 
+                         window.praiaAtual.caracteristicas?.observacao || 
+                         `Praia de ${window.praiaAtual.nome || 'pesca'}`;
+    }
+    
     const meteoHTML = `
         <div class="real-time-data">
             <h3><i class="fas fa-cloud-sun"></i> Condições Atuais em Tempo Real</h3>
             <div class="weather-grid">
+                <!-- 4 dados principais -->
                 <div class="weather-item">
                     <div class="weather-icon">
                         <i class="fas fa-temperature-high"></i>
                     </div>
                     <div class="weather-info">
                         <div class="weather-label">Temperatura</div>
-                        <div class="weather-value">${dadosMeteo.temperatura}°C</div>
+                        <div class="weather-value">${temperatura}</div>
                     </div>
                 </div>
+                
                 <div class="weather-item">
                     <div class="weather-icon">
                         <i class="fas fa-wind"></i>
                     </div>
                     <div class="weather-info">
                         <div class="weather-label">Vento</div>
-                        <div class="weather-value">${dadosMeteo.vento} m/s ${dadosMeteo.direcaoVento}</div>
+                        <div class="weather-value">${vento}</div>
                     </div>
                 </div>
+                
                 <div class="weather-item">
                     <div class="weather-icon">
                         <i class="fas fa-tachometer-alt"></i>
                     </div>
                     <div class="weather-info">
                         <div class="weather-label">Pressão</div>
-                        <div class="weather-value">${dadosMeteo.pressao} hPa</div>
+                        <div class="weather-value">${pressao}</div>
                     </div>
                 </div>
+                
                 <div class="weather-item">
                     <div class="weather-icon">
                         <i class="fas fa-tint"></i>
                     </div>
                     <div class="weather-info">
                         <div class="weather-label">Umidade</div>
-                        <div class="weather-value">${dadosMeteo.umidade}%</div>
+                        <div class="weather-value">${umidade}</div>
                     </div>
                 </div>
+                
+                <!-- Informações extras NO MESMO FORMATO -->
+                <div class="weather-item">
+                    <div class="weather-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="weather-info">
+                        <div class="weather-label">Tempo</div>
+                        <div class="weather-value">${condicao}</div>
+                    </div>
+                </div>
+                
+                <div class="weather-item">
+                    <div class="weather-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="weather-info">
+                        <div class="weather-label">Atualizado</div>
+                        <div class="weather-value">${atualizado} | Fonte: ${dadosMeteo.fonte}</div>
+                    </div>
+                </div>
+                
+                ${observacaoPraia ? `
+                <div class="weather-item">
+                    <div class="weather-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="weather-info">
+                        <div class="weather-label">OBS</div>
+                        <div class="weather-value">${observacaoPraia.substring(0, 50)}${observacaoPraia.length > 50 ? '...' : ''}</div>
+                    </div>
+                </div>
+                ` : ''}
             </div>
+            
+            <!-- Seção antiga (será escondida pelo CSS) -->
             <div class="weather-conditions">
                 <div class="condition-main">
                     <i class="fas fa-cloud"></i>
-                    <span>${dadosMeteo.condicao}</span>
+                    <span>${condicao}</span>
                 </div>
                 <div class="weather-source">
                     <small>
                         <i class="fas fa-sync-alt"></i> 
-                        Atualizado: ${new Date(dadosMeteo.atualizadoEm).toLocaleTimeString('pt-BR')} | 
+                        Atualizado: ${atualizado} | 
                         Fonte: ${dadosMeteo.fonte}
                     </small>
                 </div>
