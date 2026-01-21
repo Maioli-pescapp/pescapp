@@ -771,13 +771,28 @@ async function showFishingInfo(estadoSigla, cidadeNome, praiaNome) {
             setTimeout(() => {
                 mostrarMapaDaPraia(praiaNome, coordsPraia.lat, coordsPraia.lng);
                 
-                // Salva a praia atual para uso posterior
-                window.praiaAtual = {
-                    nome: praiaNome,
-                    coordenadas: coordsPraia,
-                    cidade: cidadeNome,
-                    estado: estadoSigla
-                };
+                // Garante que a praia atual tenha todas as propriedades necessárias
+                if (window.praiaAtual) {
+                    // Se já existe, atualiza coordenadas e garante que tem nome
+                    window.praiaAtual.coordenadas = coordsPraia;
+                    if (!window.praiaAtual.nome) {
+                        window.praiaAtual.nome = praiaNome;
+                    }
+                    if (!window.praiaAtual.cidade) {
+                        window.praiaAtual.cidade = cidadeNome;
+                    }
+                    if (!window.praiaAtual.estado) {
+                        window.praiaAtual.estado = estadoSigla;
+                    }
+                } else {
+                    // Se não existe, cria com todos os dados
+                    window.praiaAtual = {
+                        nome: praiaNome,
+                        coordenadas: coordsPraia,
+                        cidade: cidadeNome,
+                        estado: estadoSigla
+                    };
+                }
                 
             }, 300);
             // =================================

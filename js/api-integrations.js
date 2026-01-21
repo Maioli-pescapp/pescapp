@@ -641,10 +641,14 @@ const pescappAPI = {
             }
             
             const score = Math.max(1, 10 - penalidades.length * 3);
-            
+            const detalhes = penalidades.length > 0 ? 
+                penalidades.join('; ') : 
+                'Sem restrições ativas';
+
             return {
                 score,
-                penalidades
+                penalidades,
+                detalhes  // ← ADICIONE ESTA LINHA
             };
         },
 
