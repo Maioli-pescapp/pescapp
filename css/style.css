@@ -1180,3 +1180,101 @@ footer {
         font-size: 13px !important;
     }
 }
+
+/* ============================================ */
+/* ANIMAÇÃO DO PEIXE - NADANDO SUAVE */
+/* ============================================ */
+
+header h1 .fa-fish {
+    display: inline-block;
+    animation: peixeNadando 4s infinite ease-in-out;
+    margin-right: 10px;
+    color: #4fc3f7; /* Azul claro de água */
+}
+
+@keyframes peixeNadando {
+    0%, 100% { 
+        transform: translateY(0) rotate(0deg);
+    }
+    25% { 
+        transform: translateY(-3px) rotate(5deg);
+    }
+    50% { 
+        transform: translateY(0) rotate(0deg);
+    }
+    75% { 
+        transform: translateY(3px) rotate(-5deg);
+    }
+}
+
+/* Respeita preferência de usuário por menos animação */
+@media (prefers-reduced-motion: reduce) {
+    header h1 .fa-fish {
+        animation: none;
+        opacity: 0.9;
+    }
+}
+
+/* ============================================ */
+/* CORREÇÃO PARA CELULAR + PEIXE COLORIDO */
+/* ============================================ */
+
+/* 1. FORÇAR GPU no celular para animação funcionar */
+header h1 .fa-fish {
+    animation: peixeNadando 4s infinite ease-in-out;
+    /* Força aceleração por GPU no mobile */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* 2. PEIXE COLORIDO com gradiente */
+header h1 .fa-fish {
+    /* Gradiente azul para peixe colorido */
+    background: linear-gradient(45deg, #4fc3f7, #29b6f6, #0288d1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* Sombra para destacar */
+    text-shadow: 0 2px 4px rgba(0, 150, 255, 0.3);
+}
+
+/* 3. ANIMAÇÃO OTIMIZADA PARA MOBILE */
+@keyframes peixeNadando {
+    0%, 100% { 
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    25% { 
+        transform: translate3d(3px, -2px, 0) rotate(5deg);
+    }
+    50% { 
+        transform: translate3d(5px, 0, 0) rotate(0deg);
+    }
+    75% { 
+        transform: translate3d(3px, 2px, 0) rotate(-5deg);
+    }
+}
+
+/* 4. CORREÇÃO ESPECÍFICA PARA iOS */
+@supports (-webkit-touch-callout: none) {
+    header h1 .fa-fish {
+        animation-duration: 3.5s;
+        -webkit-animation: peixeNadando 3.5s infinite ease-in-out;
+    }
+}
+
+/* 5. MEDIA QUERY PARA CELULAR */
+@media (max-width: 768px) {
+    header h1 .fa-fish {
+        animation: peixeNadandoMobile 3s infinite ease-in-out;
+    }
+    
+    @keyframes peixeNadandoMobile {
+        0%, 100% { 
+            transform: translate3d(0, 0, 0) scale(1.1);
+        }
+        50% { 
+            transform: translate3d(4px, 0, 0) scale(1.1);
+        }
+    }
+}
