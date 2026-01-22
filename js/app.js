@@ -1,6 +1,64 @@
 // PescApp - Sistema com Arquivos Separados
 // Carrega dados dinamicamente de arquivos por estado
 
+// ============ SISTEMA DE ATUALIZAÇÃO AUTOMÁTICA ============
+// NÃO ALTERE MANUALMENTE - O DEPLOY.JS ATUALIZA ESTA LINHA
+const ULTIMO_COMMIT = 'eca3de8-20260122-131030'; // ← SERÁ SUBSTITUÍDO PELO DEPLOY
+
+// VERIFICAR SE PRECISA ATUALIZAR
+(function verificarAtualizacao() {
+    const COMMIT_SALVO = localStorage.getItem('pescapp_ultimo_commit');
+    
+    if (COMMIT_SALVO !== ULTIMO_COMMIT) {
+        console.log('🔄 NOVA VERSÃO DETECTADA!');
+        console.log('   Versão antiga:', COMMIT_SALVO);
+        console.log('   Versão nova:', ULTIMO_COMMIT);
+        
+        // SALVAR NOVA VERSÃO
+        localStorage.setItem('pescapp_ultimo_commit', ULTIMO_COMMIT);
+        
+        // SE É PWA INSTALADO, ATUALIZAR
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                     navigator.standalone ||
+                     window.navigator.standalone;
+        
+        if (isPWA) {
+            console.log('📱 PWA detectado - atualizando...');
+            
+            // 1. LIMPAR CACHE
+            if ('caches' in window) {
+                caches.keys().then(cacheNames => {
+                    cacheNames.forEach(cacheName => {
+                        caches.delete(cacheName);
+                        console.log('🗑️ Cache removido:', cacheName);
+                    });
+                });
+            }
+            
+            // 2. LIMPAR SERVICE WORKER
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => {
+                        registration.unregister();
+                        console.log('🔄 Service Worker removido');
+                    });
+                });
+            }
+            
+            // 3. RECARREGAR APÓS 1 SEGUNDO
+            setTimeout(() => {
+                console.log('🔄 Recarregando aplicativo...');
+                window.location.reload(true); // true = força do servidor
+            }, 1000);
+        } else {
+            console.log('🌐 Modo navegador - cache será atualizado na próxima visita');
+        }
+    } else {
+        console.log('✅ Versão atual:', ULTIMO_COMMIT);
+    }
+})();
+// ============ FIM DO SISTEMA DE ATUALIZAÇÃO ============
+
 // ============ FORÇAR ATUALIZAÇÃO DO PWA ============
 console.log('🔧 PescApp iniciando...');
 

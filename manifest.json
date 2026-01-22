@@ -8,7 +8,6 @@
   "background_color": "#ffffff",
   "theme_color": "#3498db",
   "orientation": "portrait",
-  
   "icons": [
     {
       "src": "icons/icon-192x192.png",
@@ -20,5 +19,6 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "version": "eca3de8-20260122-131030"
 }
