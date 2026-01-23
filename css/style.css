@@ -1362,3 +1362,31 @@ header h1 .fa-fish {
         justify-content: center;
     }
 }
+
+/* ANIMAÇÃO DO PEIXE NADANDO - ADICIONE ISSO DENTRO DO <style> EXISTENTE */
+@keyframes gentleSwim {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-2px) rotate(-2deg); }
+    50% { transform: translateY(0px) rotate(0deg); }
+    75% { transform: translateY(2px) rotate(2deg); }
+}
+
+@keyframes gentleGlow {
+    0%, 100% { filter: drop-shadow(0 0 2px rgba(0, 150, 255, 0.5)); }
+    50% { filter: drop-shadow(0 0 4px rgba(0, 200, 255, 0.8)); }
+}
+
+.swimming-fish {
+    height: 1.4em;
+    vertical-align: middle;
+    margin-right: 10px;
+    animation: gentleSwim 3s ease-in-out infinite,
+               gentleGlow 4s ease-in-out infinite;
+    transition: transform 0.3s ease;
+}
+
+.swimming-fish:hover {
+    animation: gentleSwim 1s ease-in-out infinite,
+               gentleGlow 2s ease-in-out infinite;
+    transform: scale(1.1);
+}
