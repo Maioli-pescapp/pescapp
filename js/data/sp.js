@@ -1,3 +1,4 @@
+/*
 // dados-sp.js - Dados de São Paulo (Litoral)
 const dadosSP = {
     nome: "São Paulo",
@@ -439,3 +440,4 @@ const dadosSP = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = dadosSP;
 }
+*/

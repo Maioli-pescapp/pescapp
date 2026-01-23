@@ -1,3 +1,4 @@
+/*
 // dados-rj.js - Dados do Rio de Janeiro
 const dadosRJ = {
     nome: "Rio de Janeiro",
@@ -393,3 +394,4 @@ const dadosRJ = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = dadosRJ;
 }
+*/
