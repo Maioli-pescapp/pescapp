@@ -1280,6 +1280,15 @@ header h1 .fa-fish {
             transform: translate3d(4px, 0, 0) scale(1.1);
         }
     }
+
+    @-webkit-keyframes peixeNadandoMobile {
+        0%, 100% { 
+            -webkit-transform: translate3d(0, 0, 0) scale(1.1);
+        }
+        50% { 
+            -webkit-transform: translate3d(4px, 0, 0) scale(1.1);
+        }
+    }
 }
 
 /* ============================================ */
