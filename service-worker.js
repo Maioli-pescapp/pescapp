@@ -1,7 +1,7 @@
 // service-worker.js - VERSÃO NUCLEAR v2.0
 
 // Versão atualizada para passar todos os testes
-const CACHE_NAME = 'pescapp-final-v3.0';
+const CACHE_NAME = 'pescapp-final-v4.0';
 const OFFLINE_URL = '/index.html';
 const PRECACHE_URLS = [
   '/',
