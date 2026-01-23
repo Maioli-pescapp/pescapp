@@ -1259,7 +1259,10 @@ header h1 .fa-fish {
 @supports (-webkit-touch-callout: none) {
     header h1 .fa-fish {
         animation-duration: 3.5s;
-        -webkit-animation: peixeNadando 3.5s infinite ease-in-out;
+        animation: peixeNadandoMobile 3s infinite ease-in-out;
+        -webkit-animation: peixeNadandoMobile 3s infinite ease-in-out;
+        -moz-animation: peixeNadandoMobile 3s infinite ease-in-out;
+        -o-animation: peixeNadandoMobile 3s infinite ease-in-out;
     }
 }
 

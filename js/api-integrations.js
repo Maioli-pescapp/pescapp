@@ -612,46 +612,149 @@ const pescappAPI = {
             };
         },
 
-        /**
-         * Verifica restrições
-         * @private
-         */
-        _verificarRestricoes(praia, data) {
+        async _verificarRestricoes(praia, data) {
             if (!praia || !praia.restricoes) {
-                return { score: 10, penalidades: [] };
+                return { score: 10, penalidades: [], detalhes: 'Sem restrições ativas' };
             }
             
             const penalidades = [];
+            let score = 10;
+            const detalhesAdicionais = [];
             
-            // Verificar defeso
+            // ============ 1. VERIFICAR DEFESOS ============
             if (praia.restricoes.defeso) {
-                const hoje = data.toISOString().split('T')[0];
+                const hoje = this._formatarDataParaComparacao(data);
+                
                 praia.restricoes.defeso.forEach(defeso => {
-                    // Simplificado - verificar lógica real depois
-                    penalidades.push(`Defeso para ${defeso.especie}`);
+                    if (defeso.periodo) {
+                        const [inicio, fim] = defeso.periodo.split(' a ');
+                        if (this._estaNoPeriodo(hoje, inicio, fim)) {
+                            penalidades.push(`🚫 Defeso: ${defeso.especie} (${defeso.periodo})`);
+                            score -= 3;
+                            detalhesAdicionais.push(`Defeso ativo para ${defeso.especie}`);
+                        }
+                    } else {
+                        penalidades.push(`⚠️ Restrição: ${defeso.especie}`);
+                        score -= 1;
+                    }
                 });
             }
             
-            // Verificar horários restritos
+            // ============ 2. HORÁRIOS RESTRITOS INTELIGENTE ============
             if (praia.restricoes.horariosRestritos) {
                 const horaAtual = data.getHours();
-                if (horaAtual >= 10 && horaAtual <= 17) {
-                    penalidades.push('Horário com muitos banhistas');
+                const diaSemana = data.getDay(); // 0=Domingo, 6=Sábado
+                const isFinalSemana = diaSemana === 0 || diaSemana === 6;
+                const mesAtual = data.getMonth() + 1; // 1-12
+                const isTemporadaAlta = mesAtual >= 11 || mesAtual <= 3; // Nov-Mar
+                
+                try {
+                    // Tentar obter dados meteorológicos REAIS
+                    const localAPI = praia.cidade ? `${praia.cidade}-ES` : 'Vitória-ES';
+                    const dadosMeteo = await this._buscarMeteorologia(localAPI, data);
+                    
+                    if (dadosMeteo) {
+                        const condicao = dadosMeteo.condicao.toLowerCase();
+                        const temperatura = dadosMeteo.temperatura;
+                        
+                        // Condições que REDUZEM banhistas
+                        const estaChovendo = condicao.includes('chuva') || 
+                                            condicao.includes('rain') || 
+                                            condicao.includes('shower');
+                        const estaNublado = condicao.includes('nublado') || 
+                                        condicao.includes('cloudy') || 
+                                        condicao.includes('overcast');
+                        const estaFrio = temperatura < 20; // Menos de 20°C
+                        const estaMuitoQuente = temperatura > 32; // Mais de 32°C
+                        const estaVentando = dadosMeteo.vento > 25; // Vento forte
+                        
+                        // Condições que AUMENTAM banhistas
+                        const estaSol = condicao.includes('sol') || 
+                                    condicao.includes('clear') || 
+                                    condicao.includes('sunny');
+                        const estaParcialmenteNublado = condicao.includes('parcialmente') || 
+                                                    condicao.includes('partly');
+                        const temperaturaAgradavel = temperatura >= 22 && temperatura <= 28;
+                        
+                        // CALCULAR ÍNDICE DE BANHISTAS (0-10)
+                        let indiceBanhistas = 0;
+                        
+                        // FATOR HORA (0-4)
+                        if (horaAtual >= 10 && horaAtual <= 12) indiceBanhistas += 2; // Manhã
+                        if (horaAtual >= 13 && horaAtual <= 15) indiceBanhistas += 4; // Tarde
+                        if (horaAtual >= 16 && horaAtual <= 18) indiceBanhistas += 3; // Final tarde
+                        
+                        // FATOR DIA DA SEMANA (0-3)
+                        if (isFinalSemana) indiceBanhistas += 3;
+                        
+                        // FATOR TEMPORADA (0-2)
+                        if (isTemporadaAlta) indiceBanhistas += 2;
+                        
+                        // FATOR TEMPO (-5 a +3)
+                        if (estaSol && temperaturaAgradavel) indiceBanhistas += 3;
+                        if (estaParcialmenteNublado && temperaturaAgradavel) indiceBanhistas += 2;
+                        if (estaChovendo) indiceBanhistas -= 5;
+                        if (estaNublado) indiceBanhistas -= 2;
+                        if (estaFrio) indiceBanhistas -= 3;
+                        if (estaMuitoQuente) indiceBanhistas -= 1;
+                        if (estaVentando) indiceBanhistas -= 2;
+                        
+                        // APLICAR PENALIDADE BASEADA NO ÍNDICE
+                        if (indiceBanhistas >= 6) {
+                            penalidades.push('🏖️ Alta concentração de banhistas (tempo agradável)');
+                            score -= 2;
+                            detalhesAdicionais.push(`Índice banhistas: ${indiceBanhistas}/10`);
+                        } else if (indiceBanhistas >= 3 && indiceBanhistas <= 5) {
+                            penalidades.push('👥 Movimento moderado de banhistas');
+                            score -= 1;
+                            detalhesAdicionais.push(`Índice banhistas: ${indiceBanhistas}/10`);
+                        } else if (indiceBanhistas < 0) {
+                            detalhesAdicionais.push(`✅ Poucos banhistas (tempo desfavorável)`);
+                        }
+                        
+                    } else {
+                        // FALLBACK: Sem dados meteorológicos, usar lógica básica
+                        if (isFinalSemana && horaAtual >= 8 && horaAtual <= 18) {
+                            penalidades.push('⏰ Final de semana: movimento intenso');
+                            score -= 2;
+                        } else if (horaAtual >= 10 && horaAtual <= 16) {
+                            penalidades.push('⏰ Horário comercial: atenção aos banhistas');
+                            score -= 1;
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.warn('Não foi possível obter dados meteorológicos:', error);
+                    // Fallback básico
+                    if (horaAtual >= 10 && horaAtual <= 17) {
+                        penalidades.push('Horário com muitos banhistas');
+                        score -= 1;
+                    }
                 }
             }
             
-            const score = Math.max(1, 10 - penalidades.length * 3);
-            const detalhes = penalidades.length > 0 ? 
-                penalidades.join('; ') : 
-                'Sem restrições ativas';
-
+            // ============ 3. OUTRAS RESTRIÇÕES ============
+            if (praia.restricoes.areasProibidas) {
+                penalidades.push(`🚧 ${praia.restricoes.areasProibidas}`);
+                score -= 2;
+            }
+            
+            if (praia.restricoes.licencaNecessaria) {
+                penalidades.push(`📋 ${praia.restricoes.licencaNecessaria}`);
+                score -= 1;
+            }
+            
+            // ============ 4. AJUSTAR SCORE FINAL ============
+            score = Math.max(1, score); // Mínimo 1
+            
             return {
                 score,
                 penalidades,
-                detalhes  // ← ADICIONE ESTA LINHA
+                detalhes: detalhesAdicionais.length > 0 ? 
+                        detalhesAdicionais.join('; ') : 
+                        'Sem restrições críticas'
             };
         },
-
         /**
          * Busca dados meteorológicos REAIS
          * @private
