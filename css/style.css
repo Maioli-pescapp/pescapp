@@ -1390,3 +1390,8 @@ header h1 .fa-fish {
                gentleGlow 2s ease-in-out infinite;
     transform: scale(1.1);
 }
+
+/* TAMANHO PARA "CONDIÇÕES ATUAIS EM TEMPO REAL" - ADICIONE NO FINAL */
+.results-section h3:not(.forecast-title) {
+    font-size: 1.0rem !important; /* Altere este número */
+}
