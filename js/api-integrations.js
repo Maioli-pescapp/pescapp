@@ -34,29 +34,27 @@ const pescappAPI = {
          * @param {Date} data - Data para busca (padrão: hoje)
          * @returns {Promise} Dados de maré
          */
-                async buscarMares(local = "Vitória-ES", data = new Date()) {
-                    const cacheKey = `${local}_${data.toISOString().split('T')[0]}`;
-                    
-                    // 1. Verificar cache primeiro
-                    if (pescappAPI._verificarCache('mares', cacheKey)) {
-                        console.log(`📦 Usando marés do cache: ${cacheKey}`);
-                        return pescappAPI._obterDoCache('mares', cacheKey);
-                    }
+        async buscarMares(local = "Vitória-ES", data = new Date()) {
+            const cacheKey = `${local}_${data.toISOString().split('T')[0]}`;
+            
+            // 1. Verificar cache primeiro
+            if (pescappAPI._verificarCache('mares', cacheKey)) {
+                console.log(`📦 Usando marés do cache: ${cacheKey}`);
+                return pescappAPI._obterDoCache('mares', cacheKey);
+            }
 
-                    // 2. Obter coordenadas do local
-                    const coords = this._obterCoordenadasPorLocal(local);
-                    
-                    console.log(`🌊 Calculando marés para ${local}...`);
-                    
-                    // 3. SEMPRE usar cálculo local (fallback garantido)
-                    const resultado = this._calcularMaresLocais(coords.lat, coords.lon, data, local);
-                    
-                    // 4. Salvar no cache e retornar
-                    pescappAPI._salvarNoCache('mares', cacheKey, resultado);
-                    return resultado;
-                },
-
-        // Adicionar APÓS a função buscarMares, mas DENTRO do objeto mares:
+            // 2. Obter coordenadas do local
+            const coords = this._obterCoordenadasPorLocal(local);
+            
+            console.log(`🌊 Calculando marés para ${local}...`);
+            
+            // 3. SEMPRE usar cálculo local (fallback garantido)
+            const resultado = this._calcularMaresLocais(coords.lat, coords.lon, data, local);
+            
+            // 4. Salvar no cache e retornar
+            pescappAPI._salvarNoCache('mares', cacheKey, resultado);
+            return resultado;
+        },
 
         _obterCoordenadasPorLocal(local) {
             const mapeamento = {
@@ -138,7 +136,7 @@ const pescappAPI = {
             }
         },
 
-       /**
+        /**
          * Buscar dados REAIS da Marinha do Brasil
          * @private
          */
@@ -180,7 +178,6 @@ const pescappAPI = {
             // TENTATIVA 2: Buscar página HTML
             return await this._buscarMaresMarinhaHTML(codigo, data);
         },
-
 
         /**
          * Calcula marés simuladas baseadas em ciclos lunares (fallback)
@@ -244,7 +241,7 @@ const pescappAPI = {
             };
         },
 
-                /**
+        /**
          * Processar dados JSON da Marinha
          * @private
          */
@@ -305,79 +302,6 @@ const pescappAPI = {
             // Por enquanto retorna null para usar dados simulados
             // Vamos implementar parser HTML na próxima etapa
             console.log('📝 Parser HTML será implementado na próxima etapa');
-            return null;
-        },
-
-        /**
-         * Processar dados JSON da Marinha
-         * @private
-         */
-        _processarDadosMarinhaReal(dadosBrutos, data) {
-            try {
-                // Estrutura esperada (pode variar)
-                const dia = data.getDate();
-                const dadosDia = dadosBrutos.dias ? dadosBrutos.dias.find(d => d.dia === dia) : null;
-                
-                if (!dadosDia) {
-                    console.warn('Dados do dia não encontrados no JSON');
-                    return null;
-                }
-                
-                const mares = [];
-                
-                // Processar marés (estrutura simplificada)
-                // Esta função precisará ser ajustada conforme a estrutura real
-                if (dadosDia.manha && dadosDia.manha.baixa) {
-                    mares.push({
-                        hora: new Date(data.getFullYear(), data.getMonth(), dia, 
-                                      parseInt(dadosDia.manha.baixa.hora), 
-                                      parseInt(dadosDia.manha.baixa.minuto)),
-                        tipo: 'baixa',
-                        altura: parseFloat(dadosDia.manha.baixa.altura?.replace('m', '') || '0.5'),
-                        fonte: 'Marinha do Brasil',
-                        confianca: 0.95
-                    });
-                }
-                
-                if (dadosDia.manha && dadosDia.manha.alta) {
-                    mares.push({
-                        hora: new Date(data.getFullYear(), data.getMonth(), dia,
-                                      parseInt(dadosDia.manha.alta.hora),
-                                      parseInt(dadosDia.manha.alta.minuto)),
-                        tipo: 'alta',
-                        altura: parseFloat(dadosDia.manha.alta.altura?.replace('m', '') || '1.2'),
-                        fonte: 'Marinha do Brasil',
-                        confianca: 0.95
-                    });
-                }
-                
-                // Ordenar por hora
-                mares.sort((a, b) => a.hora - b.hora);
-                
-                return {
-                    local: dadosBrutos.local || 'Desconhecido',
-                    data: data.toISOString().split('T')[0],
-                    mares,
-                    fonte: 'Marinha do Brasil (dados oficiais)',
-                    atualizadoEm: new Date().toISOString(),
-                    observacao: 'Dados oficiais da Marinha do Brasil'
-                };
-                
-            } catch (error) {
-                console.error('Erro ao processar dados da Marinha:', error);
-                return null;
-            }
-        },
-        
-        /**
-         * Fallback: Buscar HTML se JSON não estiver disponível
-         * @private
-         */
-        async _buscarMaresMarinhaHTML(codigo, data) {
-            console.log('🌐 Buscando dados via HTML (fallback)...');
-            
-            // Por enquanto, retorna null para usar dados simulados
-            // Implementaremos parser HTML depois
             return null;
         },
 
@@ -490,7 +414,7 @@ const pescappAPI = {
                 local: this._analisarFatoresLocais(praia),
                 
                 // Restrições (10%)
-                restricoes: this._verificarRestricoes(praia, data)
+                restricoes: await this._verificarRestricoes(praia, data)
             };
 
             return fatores;
@@ -755,6 +679,7 @@ const pescappAPI = {
                         'Sem restrições críticas'
             };
         },
+
         /**
          * Busca dados meteorológicos REAIS
          * @private
@@ -826,6 +751,51 @@ const pescappAPI = {
             const direcoes = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
             const index = Math.round(graus / 45) % 8;
             return direcoes[index];
+        },
+
+        // Adicione esta função auxiliar também:
+        _grausParaDirecao(graus) {
+            const direcoes = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
+            const index = Math.round(graus / 45) % 8;
+            return direcoes[index];
+        },
+
+        // ============ NOVOS MÉTODOS ADICIONADOS ============
+        
+        /**
+         * Formata data para comparação (YYYYMMDD)
+         * @private
+         */
+        _formatarDataParaComparacao(dataString) {
+            if (!dataString) {
+                const hoje = new Date();
+                return hoje.getFullYear() + 
+                       String(hoje.getMonth() + 1).padStart(2, '0') + 
+                       String(hoje.getDate()).padStart(2, '0');
+            }
+            
+            const data = new Date(dataString);
+            return data.getFullYear() + 
+                   String(data.getMonth() + 1).padStart(2, '0') + 
+                   String(data.getDate()).padStart(2, '0');
+        },
+
+        /**
+         * Verifica se uma data está dentro de um período
+         * @private
+         */
+        _estaNoPeriodo(dataComparacao, dataInicioStr, dataFimStr) {
+            try {
+                // Converter strings para números YYYYMMDD
+                const dataNum = parseInt(dataComparacao);
+                const inicioNum = parseInt(this._formatarDataParaComparacao(dataInicioStr));
+                const fimNum = parseInt(this._formatarDataParaComparacao(dataFimStr));
+                
+                return dataNum >= inicioNum && dataNum <= fimNum;
+            } catch (error) {
+                console.warn('Erro ao verificar período:', error);
+                return false;
+            }
         },
 
         /**
@@ -903,61 +873,59 @@ const pescappAPI = {
             }
         },
 
-        utils: {
-            /**
-             * Calcula fase lunar usando o novo sistema
-             * Mantém compatibilidade com código existente
-             */
-            calcularFaseLunar(data = new Date()) {
-                if (typeof LunarPhaseCalculator !== 'undefined') {
-                    const phaseData = LunarPhaseCalculator.calculatePhase(data);
-                    
-                    // Mantém formato compatível
-                    return {
-                        fase: phaseData.phase,
-                        emoji: phaseData.emoji,
-                        porcentagem: phaseData.percentage,
-                        faseDecimal: phaseData.phaseValue,
-                        iluminada: phaseData.illumination,
-                        dicaPesca: phaseData.fishingInfo.tip,
-                        scorePesca: phaseData.fishingInfo.score,
-                        idadeDias: phaseData.moonAge || 0
-                    };
-                }
+        /**
+         * Calcula fase lunar usando o novo sistema
+         * Mantém compatibilidade com código existente
+         */
+        calcularFaseLunar(data = new Date()) {
+            if (typeof LunarPhaseCalculator !== 'undefined') {
+                const phaseData = LunarPhaseCalculator.calculatePhase(data);
                 
-                // Fallback para função antiga
-                return this._calcularFaseLunarBackup(data);
-            },
-            
-            /**
-             * Função de fallback mantida para compatibilidade
-             * @private
-             */
-            _calcularFaseLunarBackup(data = new Date()) {
-                const year = data.getFullYear();
-                const month = data.getMonth() + 1;
-                const day = data.getDate();
-                
-                // Mapeamento básico para 2024
-                if (year === 2024) {
-                    if (month === 1) {
-                        if (day <= 2) return { fase: 'Cheia', emoji: '🌕', porcentagem: 100, scorePesca: 9 };
-                        if (day <= 9) return { fase: 'Minguante', emoji: '🌘', porcentagem: 40, scorePesca: 4 };
-                        if (day <= 17) return { fase: 'Nova', emoji: '🌑', porcentagem: 0, scorePesca: 9 };
-                        return { fase: 'Crescente', emoji: '🌒', porcentagem: 60, scorePesca: 7 };
-                    }
-                }
-                
-                // Cálculo genérico
-                const base = new Date('2000-01-01');
-                const days = (data - base) / (1000 * 60 * 60 * 24);
-                const phase = (days % 29.53) / 29.53;
-                
-                if (phase < 0.25) return { fase: 'Nova', emoji: '🌑', porcentagem: 0, scorePesca: 9 };
-                if (phase < 0.50) return { fase: 'Crescente', emoji: '🌒', porcentagem: 50, scorePesca: 7 };
-                if (phase < 0.75) return { fase: 'Cheia', emoji: '🌕', porcentagem: 100, scorePesca: 9 };
-                return { fase: 'Minguante', emoji: '🌘', porcentagem: 25, scorePesca: 4 };
+                // Mantém formato compatível
+                return {
+                    fase: phaseData.phase,
+                    emoji: phaseData.emoji,
+                    porcentagem: phaseData.percentage,
+                    faseDecimal: phaseData.phaseValue,
+                    iluminada: phaseData.illumination,
+                    dicaPesca: phaseData.fishingInfo.tip,
+                    scorePesca: phaseData.fishingInfo.score,
+                    idadeDias: phaseData.moonAge || 0
+                };
             }
+            
+            // Fallback para função antiga
+            return this._calcularFaseLunarBackup(data);
+        },
+        
+        /**
+         * Função de fallback mantida para compatibilidade
+         * @private
+         */
+        _calcularFaseLunarBackup(data = new Date()) {
+            const year = data.getFullYear();
+            const month = data.getMonth() + 1;
+            const day = data.getDate();
+            
+            // Mapeamento básico para 2024
+            if (year === 2024) {
+                if (month === 1) {
+                    if (day <= 2) return { fase: 'Cheia', emoji: '🌕', porcentagem: 100, scorePesca: 9 };
+                    if (day <= 9) return { fase: 'Minguante', emoji: '🌘', porcentagem: 40, scorePesca: 4 };
+                    if (day <= 17) return { fase: 'Nova', emoji: '🌑', porcentagem: 0, scorePesca: 9 };
+                    return { fase: 'Crescente', emoji: '🌒', porcentagem: 60, scorePesca: 7 };
+                }
+            }
+            
+            // Cálculo genérico
+            const base = new Date('2000-01-01');
+            const days = (data - base) / (1000 * 60 * 60 * 24);
+            const phase = (days % 29.53) / 29.53;
+            
+            if (phase < 0.25) return { fase: 'Nova', emoji: '🌑', porcentagem: 0, scorePesca: 9 };
+            if (phase < 0.50) return { fase: 'Crescente', emoji: '🌒', porcentagem: 50, scorePesca: 7 };
+            if (phase < 0.75) return { fase: 'Cheia', emoji: '🌕', porcentagem: 100, scorePesca: 9 };
+            return { fase: 'Minguante', emoji: '🌘', porcentagem: 25, scorePesca: 4 };
         },
 
         /**
